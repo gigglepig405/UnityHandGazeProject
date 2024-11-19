@@ -50,40 +50,71 @@ public class NetworkPlayer : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (photonView.IsMine)
         {
-            MapPosition(head, headRig);
-            MapPosition(leftHand, leftHandRig);
-            MapPosition(rightHand, rightHandRig);
+            // Ensure the head position is updated if headRig is found
+            if (headRig != null)
+            {
+                MapPosition(head, headRig);
+                Debug.Log("Head Position: " + head.position);
+            }
+            else
+            {
+                Debug.LogError("headRig is null, cannot update head position.");
+            }
 
-            UpdateHandAnimation(InputDevices.GetDeviceAtXRNode(XRNode.LeftHand), leftHandAnimator);
-            UpdateHandAnimation(InputDevices.GetDeviceAtXRNode(XRNode.RightHand), rightHandAnimator);
+            InputDevice leftHandDevice = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+            InputDevice rightHandDevice = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+
+            Debug.Log("Left Hand Device Found: " + leftHandDevice.isValid);
+            Debug.Log("Right Hand Device Found: " + rightHandDevice.isValid);
+
+            if (leftHandDevice.isValid && rightHandDevice.isValid)
+            {
+                MapPosition(leftHand, leftHandRig);
+                MapPosition(rightHand, rightHandRig);
+
+                UpdateHandAnimation(leftHandDevice, leftHandAnimator);
+                UpdateHandAnimation(rightHandDevice, rightHandAnimator);
+            }
+            else
+            {
+                Debug.LogWarning("One or both hand devices are invalid.");
+            }
         }
     }
+
+
 
     void UpdateHandAnimation(InputDevice targetDevice, Animator handAnimator)
     {
         if (targetDevice.TryGetFeatureValue(CommonUsages.trigger, out float triggerValue))
         {
+            Debug.Log("Trigger value: " + triggerValue);
             handAnimator.SetFloat("Trigger", triggerValue);
+            Debug.Log("Setting Trigger: " + triggerValue);
         }
         else
         {
             handAnimator.SetFloat("Trigger", 0);
+            Debug.Log("Setting Trigger: 0");
         }
 
         if (targetDevice.TryGetFeatureValue(CommonUsages.grip, out float gripValue))
         {
+            Debug.Log("Grip value: " + gripValue);
             handAnimator.SetFloat("Grip", gripValue);
+            Debug.Log("Setting Grip: " + gripValue);
         }
         else
         {
             handAnimator.SetFloat("Grip", 0);
+            Debug.Log("Setting Grip: 0");
         }
     }
+
 
     void MapPosition(Transform target, Transform rigTransform)
     {
